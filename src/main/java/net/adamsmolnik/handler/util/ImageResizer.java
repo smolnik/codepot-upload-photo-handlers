@@ -1,4 +1,4 @@
-package net.adamsmolnik.util;
+package net.adamsmolnik.handler.util;
 
 import java.awt.Graphics2D;
 import java.awt.Image;

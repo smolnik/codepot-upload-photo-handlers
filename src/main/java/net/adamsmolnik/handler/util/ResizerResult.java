@@ -1,4 +1,4 @@
-package net.adamsmolnik.util;
+package net.adamsmolnik.handler.util;
 
 import java.io.InputStream;
 

@@ -19,9 +19,9 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import net.adamsmolnik.handler.exception.UploadPhotoHandlerException;
 import net.adamsmolnik.handler.model.ImageMetadata;
-import net.adamsmolnik.util.ImageMetadataExplorer;
-import net.adamsmolnik.util.ImageResizer;
-import net.adamsmolnik.util.ResizerResult;
+import net.adamsmolnik.handler.util.ImageMetadataExplorer;
+import net.adamsmolnik.handler.util.ImageResizer;
+import net.adamsmolnik.handler.util.ResizerResult;
 
 /**
  * A simplified, single-threaded variation of multithreaded UploadPhotoHandler
