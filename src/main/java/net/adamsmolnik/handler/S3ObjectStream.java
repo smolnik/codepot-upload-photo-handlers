@@ -3,6 +3,9 @@ package net.adamsmolnik.handler;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -35,7 +38,11 @@ public class S3ObjectStream {
 	public S3ObjectStream(S3Entity s3Entity, UserIdentityEntity userIdentityEntity) {
 		this.bucket = s3Entity.getBucket().getName();
 		S3ObjectEntity s3Object = s3Entity.getObject();
-		this.key = s3Object.getKey();
+		try {
+			this.key = URLDecoder.decode(s3Object.getKey().replace('+', ' '), StandardCharsets.UTF_8.name());
+		} catch (UnsupportedEncodingException e) {
+			throw new IllegalArgumentException(e);
+		}
 		this.size = s3Object.getSizeAsLong();
 		this.principalId = userIdentityEntity.getPrincipalId();
 		this.userId = mapIdentity(userIdentityEntity);

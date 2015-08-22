@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
@@ -32,7 +33,7 @@ import net.adamsmolnik.handler.util.ResizerResult;
  */
 public class UploadPhotoHandler {
 
-	private static final String STUDENT_PREFIX = "001";
+	private static final String STUDENT_PREFIX = "024";
 
 	private static final String PHOTOS_TABLE_NAME = STUDENT_PREFIX + "-codepot-photos";
 
@@ -61,12 +62,13 @@ public class UploadPhotoHandler {
 
 	private void process(S3ObjectStream os, LambdaLogger log) throws IOException {
 		String srcKey = os.getKey();
-		log.log("File uploaded: " + os.getKey());
+		log.log("File uploaded: " + srcKey);
 		String userId = os.getUserId();
 		String userKeyPrefix = KEY_PREFIX + userId + "/";
-		ImageMetadata imd = new ImageMetadataExplorer().explore(os.newCachedInputStream());
-		ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochMilli(imd.getPhotoTaken().getTime()), ZoneId.of("UTC"));
-		String baseDestKey = createDestKey(srcKey, zdt, JPEG_EXT);
+		Optional<ImageMetadata> imd = new ImageMetadataExplorer().explore(os.newCachedInputStream());
+		ZonedDateTime zdt = imd.isPresent() && imd.get().getPhotoTaken().isPresent()
+				? ZonedDateTime.ofInstant(Instant.ofEpochMilli(imd.get().getPhotoTaken().get().getTime()), ZoneId.of("UTC")) : ZonedDateTime.now();
+		String baseDestKey = createDestKey(zdt, JPEG_EXT);
 		String photoKey = userKeyPrefix + baseDestKey;
 		String thumbnailKey = userKeyPrefix + "thumbnails/" + baseDestKey;
 		AmazonS3 s3 = new AmazonS3Client();
@@ -74,7 +76,7 @@ public class UploadPhotoHandler {
 		putS3Object(thumbnailKey, new ImageResizer(os.newCachedInputStream(), THUMBNAIL_SIZE).resize(), s3);
 
 		PutRequest pr = new PutRequest().withUserId(userId).withPrincipalId(os.getPrincipalId()).withPhotoKey(photoKey).withThumbnailKey(thumbnailKey)
-				.withZonedDateTime(zdt).withImageMetadata(imd);
+				.withZonedDateTime(zdt).withImageMetadata(imd).withSrcPhotoName(srcKey);
 		new AmazonDynamoDBClient().putItem(createPutRequest(pr));
 	}
 
@@ -85,15 +87,34 @@ public class UploadPhotoHandler {
 	}
 
 	private PutItemRequest createPutRequest(PutRequest pr) {
-		return new PutItemRequest().withTableName(PHOTOS_TABLE_NAME).addItemEntry("userId", new AttributeValue(pr.userId))
+		PutItemRequest req = new PutItemRequest().withTableName(PHOTOS_TABLE_NAME).addItemEntry("userId", new AttributeValue(pr.userId))
 				.addItemEntry("photoTakenDate", new AttributeValue(pr.zdt.format(DateTimeFormatter.ISO_LOCAL_DATE)))
 				.addItemEntry("photoTakenTime", new AttributeValue(pr.zdt.format(DateTimeFormatter.ISO_LOCAL_TIME)))
 				.addItemEntry("photoKey", new AttributeValue(pr.photoKey)).addItemEntry("thumbnailKey", new AttributeValue(pr.thumbnailKey))
-				.addItemEntry("bucket", new AttributeValue(DEST_BUCKET)).addItemEntry("madeBy", new AttributeValue(pr.imd.getMadeBy()))
-				.addItemEntry("model", new AttributeValue(pr.imd.getModel())).addItemEntry("principalId", new AttributeValue(pr.principalId));
+				.addItemEntry("bucket", new AttributeValue(DEST_BUCKET)).addItemEntry("principalId", new AttributeValue(pr.principalId))
+				.addItemEntry("srcPhotoName", new AttributeValue(pr.srcPhotoName));
+		if (pr.imageMetadata.isPresent()) {
+			ImageMetadata imd = pr.imageMetadata.get();
+			addOptinalItemEntry(req, "madeBy", imd.getMadeBy());
+			addOptinalItemEntry(req, "model", imd.getModel());
+			if (!imd.getPhotoTaken().isPresent()) {
+				req.addItemEntry("warning",
+						new AttributeValue("Missing photo taken date - date/time of the upload event has been used as a default"));
+			}
+		} else {
+			req.addItemEntry("warning", new AttributeValue("Missing photo/image metadata to extract"));
+		}
+		return req;
 	}
 
-	private String createDestKey(String srcKey, ZonedDateTime zdt, String ext) {
+	private PutItemRequest addOptinalItemEntry(PutItemRequest req, String attrName, Optional<String> attrValue) {
+		if (!attrValue.isPresent()) {
+			return req;
+		}
+		return req.addItemEntry(attrName, new AttributeValue(attrValue.get()));
+	}
+
+	private String createDestKey(ZonedDateTime zdt, String ext) {
 		return zdt.format(DT_FORMATTER) + "-" + Integer.toHexString(UUID.randomUUID().toString().hashCode()) + "." + ext;
 	}
 

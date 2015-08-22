@@ -1,6 +1,7 @@
 package net.adamsmolnik.handler.model;
 
 import java.util.Date;
+import java.util.Optional;
 
 /**
  * @author asmolnik
@@ -8,34 +9,34 @@ import java.util.Date;
  */
 public class ImageMetadata {
 
-	private String madeBy, model;
+	private Optional<String> madeBy, model;
 
-	private Date photoTaken;
+	private Optional<Date> photoTaken;
 
 	public ImageMetadata withPhotoTaken(Date photoTaken) {
-		this.photoTaken = photoTaken;
+		this.photoTaken = Optional.ofNullable(photoTaken);
 		return this;
 	}
 
 	public ImageMetadata withMadeBy(String madeBy) {
-		this.madeBy = madeBy;
+		this.madeBy = Optional.ofNullable(madeBy);
 		return this;
 	}
 
 	public ImageMetadata withModel(String model) {
-		this.model = model;
+		this.model = Optional.ofNullable(model);
 		return this;
 	}
 
-	public String getMadeBy() {
+	public Optional<String> getMadeBy() {
 		return madeBy;
 	}
 
-	public String getModel() {
+	public Optional<String> getModel() {
 		return model;
 	}
 
-	public Date getPhotoTaken() {
+	public Optional<Date> getPhotoTaken() {
 		return photoTaken;
 	}
 

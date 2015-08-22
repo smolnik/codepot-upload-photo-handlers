@@ -35,10 +35,13 @@ public class ImageResizer {
 		ratio = ((double) orgImg.getHeight()) / orgImg.getWidth();
 	}
 
+	// Here in just with basic capabilities. Scaling/Resizing can be done better
+	// e.g. with imgscalr-java-image-scaling-library in place
 	public ResizerResult resize() {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
-			ImageIO.write(doResize(orgImg, targetWidth, ratio), "jpg", baos);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			int orgWidth = orgImg.getWidth();
+			ImageIO.write(doResize(orgImg, orgWidth <= targetWidth ? orgWidth : targetWidth, ratio), "jpg", baos);
 			byte[] bytes = baos.toByteArray();
 			return new ResizerResult(bytes.length, new ByteArrayInputStream(bytes));
 		} catch (IOException e) {

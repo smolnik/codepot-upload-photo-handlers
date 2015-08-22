@@ -1,11 +1,13 @@
 package net.adamsmolnik.handler;
 
 import java.time.ZonedDateTime;
+import java.util.Optional;
 
 import net.adamsmolnik.handler.model.ImageMetadata;
 
 /**
- * Just helper data class.
+ * Just helper data class. All member fields MUST BE NOT NULL and all of them
+ * MUST be filled out.
  * 
  * @author asmolnik
  *
@@ -20,9 +22,11 @@ class PutRequest {
 
 	String thumbnailKey;
 
+	String srcPhotoName;
+
 	ZonedDateTime zdt;
 
-	ImageMetadata imd;
+	Optional<ImageMetadata> imageMetadata;
 
 	PutRequest withUserId(String userId) {
 		this.userId = userId;
@@ -44,13 +48,18 @@ class PutRequest {
 		return this;
 	}
 
+	PutRequest withSrcPhotoName(String srcPhotoName) {
+		this.srcPhotoName = srcPhotoName;
+		return this;
+	}
+
 	PutRequest withZonedDateTime(ZonedDateTime zdt) {
 		this.zdt = zdt;
 		return this;
 	}
 
-	PutRequest withImageMetadata(ImageMetadata imd) {
-		this.imd = imd;
+	PutRequest withImageMetadata(Optional<ImageMetadata> imageMetadata) {
+		this.imageMetadata = imageMetadata;
 		return this;
 	}
 

@@ -58,6 +58,6 @@
 				</executions>
 			</plugin>
 		</plugins>
-		<finalName>001-upload-photo-handlers</finalName>
+		<finalName>024-upload-photo-handlers</finalName>
 	</build>
 </project>
