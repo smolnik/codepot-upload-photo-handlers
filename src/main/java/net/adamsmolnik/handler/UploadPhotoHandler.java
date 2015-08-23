@@ -83,6 +83,7 @@ public class UploadPhotoHandler {
 	private void putS3Object(String objectKey, ResizerResult rr, AmazonS3 s3) {
 		ObjectMetadata md = new ObjectMetadata();
 		md.setContentLength(rr.getSize());
+		md.setContentType("image/jpeg");
 		s3.putObject(DEST_BUCKET, objectKey, rr.getInputStream(), md);
 	}
 
