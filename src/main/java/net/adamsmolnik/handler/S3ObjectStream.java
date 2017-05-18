@@ -8,7 +8,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.event.S3EventNotification.S3Entity;
 import com.amazonaws.services.s3.event.S3EventNotification.S3ObjectEntity;
 import com.amazonaws.services.s3.event.S3EventNotification.UserIdentityEntity;
@@ -21,7 +21,7 @@ import net.adamsmolnik.handler.exception.UploadPhotoHandlerException;
  */
 public class S3ObjectStream {
 
-	private final AmazonS3 s3 = new AmazonS3Client();
+	private final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
 
 	private final String userId;
 
